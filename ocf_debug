@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# ----------------------------------------------------------------------------
+# "THE BEER-WARE LICENSE" (Revision 42):
+# <jan.mara@googlemail.com> wrote this file. As long as you retain this notice you
+# can do whatever you want with this stuff. If we meet some day, and you think
+# this stuff is worth it, you can buy me a beer in return Poul-Henning Kamp
+# ----------------------------------------------------------------------------
+# Version: 0.1
+# Author:  Jan Mara <jan.mara@googlemail.com> 
+# Date:    2012/06/20
+#
+# Instructions:
+# * Install ... copy script to a location of your choice.
+# * Change the OCF_ROOT, if you like
+# * For bash completion ...
+#    Add this to your .profile (maybe change the path of the script):
+#     complete -W "$(/usr/bin/ocf_debug list)" ocf_debug
+
+OCF_ROOT="/usr/lib/ocf"
+OCF_RESDIR="$OCF_ROOT/resource.d"
+OCF_CMD=""
+
+if [ "$1" = "list" ]; then
+  crm configure show|grep primitive|awk '{print $2}'
+  exit 0
+fi
+
+
+if [ "x$1" != "x" ]; then
+echo "Please run the following command by yourself"
+echo ""
+echo "Generating exports for \"$1\":"
+for i in $(crm configure show $1|grep params|sed -e "s/params//"|sed -e "s/\\\//"); do 
+    echo "export OCF_RESKEY_$i"; 
+done
+echo "export OCF_ROOT=$OCF_ROOT"
+OCF_CMD=$(crm configure show |grep "primitive $1"|awk '{print $3}'|sed -e 's/ocf://'|sed -e 's/:/\//')
+echo ""
+echo "Runit with:"
+echo "$OCF_RESDIR/$OCF_CMD"
+else
+  echo "Usage: $0 (list|name of the resource)"
+  exit 1
+fi
+
